@@ -136,11 +136,11 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             } else {
-                Toast.makeText(context, "Ứng dụng không được phép đặt alarm", Toast.LENGTH_SHORT)
+                Toast.makeText(context, "Ứng dụng không được phép đặt alarm", Toast.LENGTH_SHORT).show()
             }
         }catch(e: SecurityException) {
             e.printStackTrace()
-            Toast.makeText(context, "Không thể đặt alarm do thiếu quyền", Toast.LENGTH_SHORT)
+            Toast.makeText(context, "Không thể đặt alarm do thiếu quyền", Toast.LENGTH_SHORT).show()
         }
         Toast.makeText(context, "Báo thức đã đặt!", Toast.LENGTH_SHORT).show()
     }
