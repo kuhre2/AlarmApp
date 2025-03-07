@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
@@ -40,6 +42,7 @@ class MainActivity : ComponentActivity() {
         @RequiresApi(Build.VERSION_CODES.S)
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            requestExactAlarmPermission(this)
             setContent {
                 AlarmApp()
             }
@@ -119,28 +122,30 @@ class MainActivity : ComponentActivity() {
         val pendingIntent = PendingIntent.getBroadcast(
             context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        try {
-            if(alarmManager.canScheduleExactAlarms()){
-                if (repeat) {
-                    alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    AlarmManager.INTERVAL_DAY,
-                    pendingIntent
-                    )
-                } else {
-                    alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                    )
-                }
-            } else {
-                Toast.makeText(context, "Ứng dụng không được phép đặt alarm", Toast.LENGTH_SHORT).show()
-            }
-        }catch(e: SecurityException) {
-            e.printStackTrace()
-            Toast.makeText(context, "Không thể đặt alarm do thiếu quyền", Toast.LENGTH_SHORT).show()
+        if (repeat) {
+            alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                AlarmManager.INTERVAL_DAY,
+                pendingIntent
+            )
+        } else {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
         }
         Toast.makeText(context, "Báo thức đã đặt!", Toast.LENGTH_SHORT).show()
     }
+fun requestExactAlarmPermission(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val alarmManager = context.getSystemService(AlarmManager::class.java)
+        if (!alarmManager.canScheduleExactAlarms()) {
+            val intent = Intent(
+                Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                "package:${context.packageName}".toUri())
+            context.startActivity(intent)
+        }
+    }
+}
