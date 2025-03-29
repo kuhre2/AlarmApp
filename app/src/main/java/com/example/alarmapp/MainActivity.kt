@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -34,14 +35,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import java.util.Calendar
+import java.util.Locale
+import java.util.jar.Manifest
 
 class MainActivity : ComponentActivity() {
 
         @RequiresApi(Build.VERSION_CODES.S)
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    val NOTIFICATION_PERMISSION_REQUEST_CODE = 0
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                        NOTIFICATION_PERMISSION_REQUEST_CODE
+                    )
+                }
+            }
             requestExactAlarmPermission(this)
             setContent {
                 AlarmApp()
@@ -51,12 +67,7 @@ class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.S)
     @Composable
-    @Preview(showBackground = true)
     fun AlarmApp() {
-        @Composable
-        fun PreviewAlarmApp() {
-            AlarmApp()
-        }
         val context = LocalContext.current
 
         var time by remember { mutableStateOf(Calendar.getInstance()) }
@@ -96,7 +107,7 @@ class MainActivity : ComponentActivity() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Giờ đã chọn: ${String.format("%02d:%02d", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE))}",
+                text = "Giờ đã chọn: ${String.format(Locale.getDefault(),"%02d:%02d", time.get(Calendar.HOUR_OF_DAY), time.get(Calendar.MINUTE))}",
                 fontSize = 18.sp
             )
 
